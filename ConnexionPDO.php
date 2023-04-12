@@ -2,6 +2,7 @@
 /**
  * Classe de connexion et d'exécution des requêtes dans une BDD MySQL
  */
+
 class ConnexionPDO {
 
     private $conn = null;
@@ -34,12 +35,17 @@ class ConnexionPDO {
             $requetePrepare = $this->conn->prepare($requete);
             if($param != null){
                 foreach($param as $key => &$value){				
-                    $requetePrepare->bindParam(":$key", $value);				
+                    $requetePrepare->bindParam(":$key", $value);
                 }
             }	
-            return $requetePrepare->execute();			
+            $requetePrepare->execute();
+            if ($requetePrepare->errorCode() != "00000") {
+                return true;
+            } else {
+                return "Code : ".$requetePrepare->errorCode()." -> ".$requete;
+            }
         }catch(Exception $e){
-            return null;
+            return false;
         }
     }
 
@@ -62,6 +68,22 @@ class ConnexionPDO {
         }catch(Exception $e){
             return null;
         }		
+    }
+    
+    public function getTableCols($requete){
+        try{
+            $requetePrepare = $this->conn->prepare($requete);
+            $requetePrepare->execute();				
+            $colCount = $requetePrepare->columnCount();
+            $columns = array();
+            for($i=0;$i<$colCount;$i++){
+                $meta = $requetePrepare->getColumnMeta($i);
+                $columns[strtolower($meta['name'])] = $meta['name'];
+            }
+            return $columns;
+        }catch(Exception $e){
+            return null;
+        }
     }
 	
 }

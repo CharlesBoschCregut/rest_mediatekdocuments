@@ -1,6 +1,5 @@
 <?php
 include_once("AccessBDD.php");
-
 /**
  * Contrôleur : reçoit et traite les demandes du point d'entrée
  */
@@ -44,7 +43,10 @@ class Controle{
         $result = null;
         if ($id==null){
             $result = $this->accessBDD->selectAll($table);
-        }else{
+        } elseif ($id=="get") {
+            $result = $this->accessBDD->getHighestId($table);
+        }
+        else{
             $result = $this->accessBDD->selectOne($table, $id);
         }
         if ($result == null || $result == false){
@@ -73,12 +75,19 @@ class Controle{
      * @param string $table nom de la table
      * @param array $champs nom et valeur des champs
      */
-    public function post($table, $champs){
-        $result = $this->accessBDD->insertOne($table, $champs);	
-        if ($result == null || $result == false){
+    public function post($table, $champs, $id){
+        if ($id==null) {
+            $result = $this->accessBDD->insertOne($table, $champs);	
+        } else {
+            $result = $this->accessBDD->insertClass($table, $champs);	
+        }
+        
+        if ($result == false || $result == null) {
             $this->reponse(400, "requete invalide");
-        }else{	
-            $this->reponse(200, "OK");
+        }elseif ($result == true){	
+            $this->reponse(200, "OK ");
+        } else {
+            $this->reponse(400, "Erreur SQL : ".$result);
         }
     }
 

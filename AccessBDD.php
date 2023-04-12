@@ -96,6 +96,16 @@ class AccessBDD {
         $req .= "order by titre ";		
         return $this->conn->query($req);
     }	
+    
+    /**
+     * récupération de toutes les lignes de la table Livre et les tables associées
+     * @return lignes de la requete
+     */
+    public function getHighestId($table){
+        $req = "Select id from $table ";
+        $req .= "order by id DESC ";		
+        return $this->conn->query($req);
+    }	
 
     /**
      * récupération de toutes les lignes de la table DVD et les tables associées
@@ -141,7 +151,7 @@ class AccessBDD {
         $req .= "where e.id = :id ";
         $req .= "order by e.dateAchat DESC";		
         return $this->conn->query($req, $param);
-    }		
+    }
 
     /**
      * suppresion d'une ou plusieurs lignes dans une table
@@ -191,6 +201,47 @@ class AccessBDD {
             return null;
         }
     }
+    
+    /**
+     * Ajout d'une ligne dans une table en éliminant les données inutiles
+     * @param type $table
+     * @param type $contenu
+     * @return type
+     */
+    public function insertClass($table, $contenu){
+        if ($this->conn != null && $contenu != null) {
+            //Récupération des noms des colonnes de la table Livre
+            $req = "SELECT * FROM $table";
+            $columns = $this->conn->getTableCols($req);
+            
+            //Construction de la requete
+            $requete = "insert into $table (";
+            foreach ($contenu as $key => $value){
+                if (isset($columns[strtolower($key)])) {
+                    $requete .= "$key,";
+                } else {
+                   unset($contenu[$key]);
+                }
+            }
+            
+            // (enlève la dernière virgule)
+            $requete = substr($requete, 0, strlen($requete)-1);
+            
+            $requete .= ") values (";
+            foreach ($contenu as $key => $value){
+                if (isset($columns[strtolower($key)])) {
+                    $requete .= ":$key,";
+                }
+            }
+            // (enlève la dernière virgule)
+            $requete = substr($requete, 0, strlen($requete)-1);
+            $requete .= ");";
+            
+            return $this->conn->execute($requete, $contenu);
+        } else {
+            return null;
+        }
+    }
 
     /**
      * modification d'une ligne dans une table
@@ -201,15 +252,23 @@ class AccessBDD {
      */	
     public function updateOne($table, $id, $champs){
         if($this->conn != null && $champs != null){
-            // construction de la requête
+            $req = "SELECT * FROM $table";
+            $columns = $this->conn->getTableCols($req);
+            
+            //Construction de la requete
             $requete = "update $table set ";
             foreach ($champs as $key => $value){
-                $requete .= "$key=:$key,";
+                if (isset($columns[strtolower($key)])) {
+                    $requete .= "$key=:$key,";
+                } else {
+                   unset($champs[$key]);
+                }
             }
+            
             // (enlève la dernière virgule)
             $requete = substr($requete, 0, strlen($requete)-1);				
             $champs["id"] = $id;
-            $requete .= " where id=:id;";				
+            $requete .= " where id=:id;";		
             return $this->conn->execute($requete, $champs);		
         }else{
             return null;

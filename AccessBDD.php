@@ -60,6 +60,11 @@ class AccessBDD {
             switch($table){
                 case "exemplaire" :
                     return $this->selectAllExemplairesRevue($id);
+                    
+                case "livre" :
+                    return $this->selectLivre($id);
+                case "commande":
+                    return $this->selectCommande($id);
                 default:
                     // cas d'un select portant sur une table simple			
                     $param = array(
@@ -70,6 +75,30 @@ class AccessBDD {
         }else{
                 return null;
         }
+    }
+    
+    private function selectLivre($id) 
+    {
+        $req = "Select l.id, l.ISBN, l.auteur, d.titre, d.image, l.collection, ";
+        $req .= "d.idrayon, d.idpublic, d.idgenre, g.libelle as genre, p.libelle as lePublic, r.libelle as rayon ";
+        $req .= "from livre l join document d on l.id=d.id ";
+        $req .= "join genre g on g.id=d.idGenre ";
+        $req .= "join public p on p.id=d.idPublic ";
+        $req .= "join rayon r on r.id=d.idRayon ";
+        $req .= "where l.id=$id ";
+        $req .= "order by titre ";
+        return $this->conn->query($req);
+    }    
+    
+    private function selectCommande($id) 
+    {
+        $req = "SELECT c.id, c.dateCommande as DateCommande, c.montant, cd.nbExemplaire, cd.idLivreDvd, s.id as IdSuivi, s.libelle as suivi ";
+        $req .= "FROM commandedocument cd ";
+        $req .= "JOIN commande c on cd.id = c.id ";
+        $req .= "JOIN suivi s ON s.id = cd.idsuivi ";
+        $req .= "WHERE cd.idLivreDvd = $id ";
+        $req .= "ORDER BY id ";
+        return $this->conn->query($req);
     }
 
     /**
@@ -236,7 +265,6 @@ class AccessBDD {
             // (enlève la dernière virgule)
             $requete = substr($requete, 0, strlen($requete)-1);
             $requete .= ");";
-            
             return $this->conn->execute($requete, $contenu);
         } else {
             return null;

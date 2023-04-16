@@ -40,13 +40,14 @@ CREATE TABLE IF NOT EXISTS `commande` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Listage des données de la table mediatek86.commande : ~4 rows (environ)
+-- Listage des données de la table mediatek86.commande : ~5 rows (environ)
 INSERT INTO `commande` (`id`, `dateCommande`, `montant`) VALUES
 	('30002', '2023-04-14 15:02:01', 0),
 	('30003', '2023-04-13 18:31:02', 65),
 	('30004', '2023-04-13 18:31:10', 87),
 	('30006', '2023-04-14 17:05:10', 0.21),
-	('30007', '2023-04-14 17:11:52', 0);
+	('30007', '2023-04-14 17:11:52', 0),
+	('30008', '2023-04-16 12:06:37', 0);
 
 -- Listage de la structure de la table mediatek86. commandedocument
 CREATE TABLE IF NOT EXISTS `commandedocument` (
@@ -62,13 +63,14 @@ CREATE TABLE IF NOT EXISTS `commandedocument` (
   CONSTRAINT `FK_commandedocument_suivi` FOREIGN KEY (`idsuivi`) REFERENCES `suivi` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Listage des données de la table mediatek86.commandedocument : ~5 rows (environ)
+-- Listage des données de la table mediatek86.commandedocument : ~6 rows (environ)
 INSERT INTO `commandedocument` (`id`, `nbExemplaire`, `idLivreDvd`, `idsuivi`) VALUES
 	('30002', 1, '00005', '00003'),
 	('30003', 3, '00005', '00003'),
 	('30004', 4, '00005', '00004'),
 	('30006', 7, '00009', '00001'),
-	('30007', 1, '00005', '00003');
+	('30007', 1, '00005', '00003'),
+	('30008', 3, '00005', '00003');
 
 -- Listage de la structure de la table mediatek86. document
 CREATE TABLE IF NOT EXISTS `document` (
@@ -378,6 +380,24 @@ INSERT INTO `suivi` (`id`, `libelle`) VALUES
 	('00002', 'relancé'),
 	('00003', 'livrée'),
 	('00004', 'réglée');
+
+-- Listage de la structure de le déclencheur mediatek86. tr_commandedocument_after_update
+SET @OLDTMP_SQL_MODE=@@SQL_MODE, SQL_MODE='';
+DELIMITER //
+CREATE TRIGGER `tr_commandedocument_after_update` AFTER UPDATE ON `commandedocument` FOR EACH ROW BEGIN
+    IF NEW.idsuivi = '00003' THEN
+        SET @i = 1;
+        WHILE @i <= NEW.nbExemplaire DO
+            SET @max_numero = (SELECT COALESCE(MAX(numero), 0) + 1 FROM exemplaire);
+            SET @date_achat = (SELECT dateCommande FROM commande WHERE id = NEW.id);
+            INSERT INTO exemplaire (id, numero, dateAchat, photo, idEtat)
+            VALUES (NEW.idLivreDvd, @max_numero, @date_achat, '', '00001');
+            SET @i = @i + 1;
+        END WHILE;
+    END IF;
+END//
+DELIMITER ;
+SET SQL_MODE=@OLDTMP_SQL_MODE;
 
 -- Listage de la structure de le déclencheur mediatek86. tr_commandedocument_insert
 SET @OLDTMP_SQL_MODE=@@SQL_MODE, SQL_MODE='';

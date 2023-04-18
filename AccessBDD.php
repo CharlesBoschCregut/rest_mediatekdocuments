@@ -175,8 +175,9 @@ class AccessBDD {
         $param = array(
                 "id" => $id
         );
-        $req = "Select e.id, e.numero, e.dateAchat, e.photo, e.idEtat ";
+        $req = "Select e.id, e.numero, e.dateAchat, e.photo, e.idEtat, et.libelle AS Etat ";
         $req .= "from exemplaire e join document d on e.id=d.id ";
+        $req .= "join etat et on et.id = e.idEtat ";
         $req .= "where e.id = :id ";
         $req .= "order by e.dateAchat DESC";		
         return $this->conn->query($req, $param);
@@ -296,7 +297,11 @@ class AccessBDD {
             // (enlève la dernière virgule)
             $requete = substr($requete, 0, strlen($requete)-1);				
             $champs["id"] = $id;
-            $requete .= " where id=:id;";		
+            if ($table == "exemplaire") {
+                $requete .= " where numero=:id;";
+            } else {
+                $requete .= " where id=:id;";
+            }
             return $this->conn->execute($requete, $champs);		
         }else{
             return null;

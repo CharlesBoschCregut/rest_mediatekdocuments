@@ -23,13 +23,20 @@ if(!isset($_SERVER['PHP_AUTH_USER']) || (isset($_SERVER['PHP_AUTH_USER']) &&
     // nom et valeur des champs au format json
     $contenu = filter_input(INPUT_GET, 'contenu', FILTER_SANITIZE_STRING,FILTER_FLAG_NO_ENCODE_QUOTES) ??
                filter_input(INPUT_POST, 'contenu', FILTER_SANITIZE_STRING,FILTER_FLAG_NO_ENCODE_QUOTES);
+    error_log($table." ".$id." ".$type." ".$contenu);
     if($contenu != ""){
         $contenu = json_decode($contenu, true);
     }
+    
+    
 
     // traitement suivant le verbe HTTP utilisé
     if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-        $controle->get($table, $id);
+        if ($type == "LOGIN") {
+            $controle->login($contenu);
+        } else {
+            $controle->get($table, $id);
+        }
     } else if($_SERVER['REQUEST_METHOD'] === 'POST') {
         switch ($type) {
             case "UPD":
@@ -38,6 +45,7 @@ if(!isset($_SERVER['PHP_AUTH_USER']) || (isset($_SERVER['PHP_AUTH_USER']) &&
             case "REM":
                 $controle->delete($table, $contenu);
                 break;
+                
 
             default:
                 $controle->post($table, $contenu, $id);

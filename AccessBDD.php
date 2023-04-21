@@ -285,7 +285,7 @@ class AccessBDD {
             $columns = $this->conn->getTableCols($req);
             
             //Construction de la requete
-            $requete = "update $table set ";
+            $requete = "update $table set ";    
             foreach ($champs as $key => $value){
                 if (isset($columns[strtolower($key)])) {
                     $requete .= "$key=:$key,";
@@ -305,6 +305,26 @@ class AccessBDD {
             return $this->conn->execute($requete, $champs);		
         }else{
             return null;
+        }
+    }
+    
+    public function login($creds)
+    {
+        $param = array(
+            "login" => $creds["login"],
+            "pwd" => $creds["pwd"]
+        );
+
+        $req = "SELECT users.idservice ";
+        $req .= "FROM userlogin login ";
+        $req .= "JOIN utilisateurs users ON login.id = users.id ";
+        $req .= "WHERE login.login = :login AND login.pwd = :pwd ";
+        
+        $result = $this->conn->query($req, $param);
+        if (empty($result)) {
+            return "failed";
+        } else {
+            return $result;
         }
     }
 

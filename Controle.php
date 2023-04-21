@@ -31,6 +31,7 @@ class Controle{
             'message' => $message,
             'result' => $result
         );
+        error_log(json_encode($retour, JSON_UNESCAPED_UNICODE));
         echo json_encode($retour, JSON_UNESCAPED_UNICODE);
     }
 
@@ -105,7 +106,19 @@ class Controle{
             $this->reponse(200, "OK");
         }
     }
-	
+    
+    public function login($credentials) {
+        $result = $this->accessBDD->login($credentials);	
+        if ($result == null || $result == false){
+            $this->reponse(400, "requete invalide");
+        } elseif ($result == "failed") {
+            $this->reponse(401 , "Indentifiant ou mdp invalide");
+        }else{	
+            $this->reponse(200, "OK", $result);
+        }
+    }
+
+
     /**
      * login et/ou pwd incorrects
      */
